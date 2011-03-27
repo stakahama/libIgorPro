@@ -1,0 +1,43 @@
+Igor Pro (Wavemetrics, Inc.) is a software used by many members of the atmospheric aerosol community (among others). 
+
+Difficulties:
+- "Waves are global objects" (Igor manual Version 6.1, p. IV-48).
+- Data structure definitions exist only locally within functions.
+- "Operations" produce side effects (create variables that are not returned values).
+
+Remedies:
+- Use data folders to implement namespaces for waves and other data (not for functions).
+- Use data folders or "string list of waves" to implement data structures that persist across functions.
+- Wrap operations in functions to contain side effects.
+
+The ipf file(s) in this project can be included in ~/Documents/WaveMetrics/Igor Pro 6 User Files/ (Mac) or C:/Documents and Settings/username/My Documents/WaveMetrics/Igor Pro 6 User Files/ (Windows) to have these functions available for every Igor program.
+
+Addtionally, local environments can also be implemented within functions as shown in the following examples:
+
+function foo()
+	variable output
+	newdatafolder/s local
+		... make waves, compute ...
+		... assign computed value to 'output' ...
+	killdatafolder : // this will kill any waves still residing in 'local'
+	return output
+end
+
+function bar1()
+	newdatafolder/s local
+		make localwave = {1}
+		make/n=(numpnts(localwave)) transformed = fn(localwave[p])
+		duplicate transformed root:mynamespace:mywave
+		... and so on ...
+	killdatafolder : // this will kill any waves still residing in 'local'
+end
+
+function bar2()
+	newdatafolder/s local
+		make localwave = {1}
+		make/n=(numpnts(localwave)) root:mynamespace:mywave
+		wave transformed = root:mynamespace:mywave
+		transformed = fn(localwave[p])
+		... and so on ...
+	killdatafolder : // this will kill any waves still residing in 'local'
+end
