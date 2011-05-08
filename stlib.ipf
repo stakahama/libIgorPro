@@ -338,3 +338,55 @@ end
 function killgraphs()
 	killwindows("Graph")
 end
+
+// === hdf5 ===
+
+Function ExportHDF5(pathStr, fileName, listOfWaves)
+// usage example:
+// exporthdf5("turtle:Users:stakahama:tmp","testOut.h5","scatnumbylogdparr;scatmassbylogdparr;specsizequad;nspecdatetimearray")
+
+        String pathStr  // Name of path as string
+        String fileName // Name of HDF5 file
+        String listOfWaves      // Semicolon-separated list of waves
+        
+        Variable result = 0     // 0 means no error
+        
+        NewPath/O/Q pathName pathStr
+        Variable fileID
+        
+        // Create a new HDF5 file, overwriting if same-named file exists.
+        HDF5CreateFile/P=pathName /O /Z fileID as fileName
+        if (V_flag != 0)
+                Print "HDF5CreateFile failed"
+                return -1
+        endif
+        
+        String listItem
+        Variable index
+        
+        index = 0
+        do
+                listItem = StringFromList(index, listOfWaves)
+                if (strlen(listItem) == 0)
+                        break                                                                           // No more waves
+                endif
+                
+                // Create a local reference to the wave
+                Wave w = $listItem
+                
+                // Save wave as dataset.
+                HDF5SaveData /O /Z w, fileID
+                if (V_flag != 0)
+                        Print "HDF5SaveData failed"
+                        result = -1
+                        break
+                endif
+                
+                index += 1
+        while(1)
+
+        // Close the HDF5 file.
+        HDF5CloseFile fileID
+        
+        return result
+End
