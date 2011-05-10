@@ -42,13 +42,21 @@ function bar2()
 	killdatafolder : // this will kill any waves still residing in 'local'
 end
 
-function bar3(wavefullname)
+function bar3(wavefullname) // defined closer to a fortran subroutine but not really
 	string wavefullname
 	newdatafolder/s local
 		make localwave = {1}
-		make/n=(numpnts(localwave)) root:mynamespace:mywave
+		make/n=(numpnts(localwave)) $wavefullname
 		wave transformed = $wavefullname
 		transformed = fn(localwave[p])
 		... and so on ...
 	killdatafolder : // this will kill any waves still residing in 'local'
+end
+
+function twonorm(wavereference) // defined more like a fortran subroutine
+	wave wavereference
+	newdatafolder/s local
+		make/n=(numpnts(wavereference)) wavesq = wavereference[p]^2
+		wavereference = wavereference[p]/sqrt(sum(wavesq))
+	killdatafolder :
 end
