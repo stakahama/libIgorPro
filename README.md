@@ -10,7 +10,14 @@ Remedies:
 - Use data folders or "string list of waves" to implement data structures that persist across functions.
 - Wrap operations in functions to contain side effects.
 
-The ipf file(s) in this project can be included in ~/Documents/WaveMetrics/Igor Pro 6 User Files/ (Mac) or C:/Documents and Settings/username/My Documents/WaveMetrics/Igor Pro 6 User Files/ (Windows) to have these functions available for every Igor program.
+The ipf file(s) in this project can be included in 
+~/Documents/WaveMetrics/Igor Pro 6 User Files/ (Mac), or 
+C:/Documents and Settings/username/My Documents/WaveMetrics/Igor Pro 6 User Files/ (Windows) 
+to have these functions available for every Igor program.
+(On a Mac, can set =ln -s stlib.ipf "~/Documents/WaveMetrics/Igor Pro 6 User Files/"=;
+on Windows this can also be handled through a shortcut.
+In a procedure window, use 
+#include "stlib"
 
 Addtionally, local environments can also be implemented within functions as shown in the following examples:
 
