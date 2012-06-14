@@ -16,7 +16,7 @@ C:/Documents and Settings/username/My Documents/WaveMetrics/Igor Pro 6 User File
 to have these functions available for every Igor program.
 (On a Mac, can set 'ln -s stlib.ipf "~/Documents/WaveMetrics/Igor Pro 6 User Files/"';
 on Windows this can also be handled through a shortcut.
-In a procedure window, use '#include "stlib"' statement
+In a procedure window, use '#include "stlib"' statement.
 
 Addtionally, local environments can also be implemented within functions as shown in the following examples:
 
