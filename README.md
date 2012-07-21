@@ -92,3 +92,5 @@ You can verify that the HDF5 extension and the HDF5 Browser procedure
 file were loaded by choosing Data→Load Waves→New HDF5 Browser. You can
 verify that the HDF5 Help file was opened by choosing Windows→Help
 Windows→HDF5 Help.ihf.
+
+This is automated in setup.sh.
