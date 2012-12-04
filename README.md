@@ -70,27 +70,33 @@ Addtionally, local environments can also be implemented within functions as show
 Require HDF5 module (comment out ExportHDF5 if not desired). From the IGOR Manual (pp. II-47 to II-48 in Version 6.2):
 
 [T]he HDF5 file loader package consists of an extension named HDF5.xop, a help file named "HDF5 Help.ihf" and a procedure file named "HDF5 Browser.ipf". Here is how you would activate these files:
+
 1. Press the shift key and choose Help→Show Igor Pro Folder and User
    Files. This displays the Igor Pro Folder and the Igor Pro User
    Files folder on the desktop.
+
 2. Make an alias/shortcut for "Igor Pro Folder/More Extensions/File
    Loaders/HDF5.xop" and put it in "Igor Pro User Files/Igor
    Extensions". This causes Igor to load the extension the next time
    Igor is launched.
+
 3. Make an alias/shortcut for "Igor Pro Folder/More Extensions/File
    Loaders/HDF5 Help.ihf" and put it in "Igor Pro User Files/Igor Help
    Files". This causes Igor to automatically open the help file the
    next time Igor is launched. This step is necessary only if you want
    the help file to be automatically opened.
+
 4. Make an alias/shortcut for "Igor Pro Folder/WaveMetrics
    Procedures/File Input Output/HDF5 Browser.ipf" and put it in "Igor
    Pro User Files/Igor Procedures". This causes Igor to load the
    proce- dure the next time Igor is launched and to keep it open
    until you quit Igor.
+
 5. Restart Igor.
+
 You can verify that the HDF5 extension and the HDF5 Browser procedure
 file were loaded by choosing Data→Load Waves→New HDF5 Browser. You can
 verify that the HDF5 Help file was opened by choosing Windows→Help
 Windows→HDF5 Help.ihf.
 
-This is automated in setup.sh.
+This is automated in setup.sh for Mac/Linux (though paths may need to be changed).
