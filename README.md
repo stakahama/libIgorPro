@@ -32,7 +32,7 @@ end
 ```
 `newdatafolder/s local` creates a new data folder and immediately sets this context as the new working scope. `killdatafolder :` kills all waves created in `local` data folder. Without using such a data folder, any waves created within the function can conflict with an existing wave (in the global scope), and temporary waves will have to be killed explicitly with `killwaves/z waveseq,...` and so on. I cannot speak to the efficiency of this approach of creating temporary data folders within each function, but computationally expensive operations will hopefully be handled by an XOP (external operating procedure, e.g., a C program) in any case.
 
-*Computing on waves with functions.* Fortran does not allow arrays to be returned from functions; the standard practice is to use subroutines. There is no such distinction with Igor Pro, but a `function` can also serve as a subroutine as side effects in functions are not discouraged (as in most other languages) but used as a necessary tool for computation. To compute the normed vector, a Fortran-esque solution is to define the array outside of a defined function and pass the reference so that its values can be overwritten:
+*Computing on waves with functions.* An Igor Pro function serves as both function and subroutine (in Fortran parlance); side effects in functions are not discouraged as in most other languages but used as a necessary tool for computation. To compute the normed vector, a Fortran-esque solution is to define the array outside of the function definition and to pass the reference so that its values are overwritten:
 ```
 function normalizewave(inpwave,outwave)
     wave inpwave
@@ -63,6 +63,8 @@ end
 •print newvector_
   newvector_[0]= {0.816497,0.408248,0.408248}
 ```
+It is possible to create waves in the global or any other namespace at any time from within functions; this flexibility is dangerous as it results in "spaghetti code" or something possibly worse.
+
 
 Require HDF5 module (comment out ExportHDF5 if not desired). From the IGOR Manual (pp. II-47 to II-48 in Version 6.2):
 
