@@ -1,4 +1,4 @@
-Igor Pro (Wavemetrics, Inc.) is a software used by many members of the atmospheric aerosol community (among others). 
+Igor Pro (Wavemetrics, Inc.) is a software used by many members of the atmospheric aerosol community (among others). The included programming language grew out of a set of macro routines, so shows its operational heritage.
 
 Challenges:
 - "Waves are global objects" (Igor manual Version 6.1, p. IV-48).
@@ -11,65 +11,62 @@ Remedies:
 - Wrap operations in functions to contain side effects.
 
 The ipf file(s) in this project can be included in 
-~/Documents/WaveMetrics/Igor Pro 6 User Files/ (Mac), or 
-C:/Documents and Settings/username/My Documents/WaveMetrics/Igor Pro 6 User Files/ (Windows) 
-to have these functions available for every Igor program.
-(On a Mac, can set 'ln -s stlib.ipf "~/Documents/WaveMetrics/Igor Pro 6 User Files/"';
-on Windows this can also be handled through a shortcut.
-In a procedure window, use '#include "stlib"' statement.
+`~/Documents/WaveMetrics/Igor Pro 6 User Files/` (Mac), or `C:/Documents and Settings/username/My Documents/WaveMetrics/Igor Pro 6 User Files/` (Windows) to have these functions available for every Igor program.
+On a Mac, can set `ln -s stlib.ipf "~/Documents/WaveMetrics/Igor Pro 6 User Files/"`; on Windows this can also be handled through a shortcut. In a procedure window, use `#include "stlib"` statement to use functions from the library.
 
-Addtionally, local environments can also be implemented within functions as shown in the following examples:
+*Local environments.* Local function environments can be implemented using data folders as shown in the following example; we define a function to calculate the two-norm distance of a vector.
+```
+function twonormdist(waveref)
+    wave waveref // this is just a reference to the wave
+    variable value
+    newdatafolder/s local
+    	make/n=(numpnts(waveref)) wavesq = waveref[p]^2
+        value = sqrt(sum(wavesq))
+    killdatafolder : 
+    return value
+end
 
-    function foo()
-    	variable output
-    	newdatafolder/s local
-    		... make waves, compute ...
-    		... assign computed value to 'output' ...
-    	killdatafolder : // this will kill any waves still residing in 'local'
-    	return output
-    end
+•make/o vector = {1,0.5,0.5}
+•print twonormdist(vector)
+  1.22474
+```
+`newdatafolder/s local` creates a new data folder and immediately sets this context as the new working scope. `killdatafolder :` kill all waves created in `local` data folder. Without using such a data folder, any waves created within the function can conflict with an existing wave (in the global scope), and temporary waves will have to be killed explicitly with `killwaves/z waveseq,...` and so on. I cannot speak to the efficiency of this approach, but computationally expensive operations will hopefully be handled by an XOP (external operating procedure, e.g., a C program) in any case.
 
-    function bar1()
-    	newdatafolder/s local
-    		make localwave = {1}
-    		make/n=(numpnts(localwave)) transformed = fn(localwave[p])
-    		duplicate transformed root:mynamespace:mywave
-    		... and so on ...
-    	killdatafolder : // this will kill any waves still residing in 'local'
-    end
+*Computing on waves with functions.* Fortran does not allow arrays to be returned from functions; the standard practice is to use subroutines. There is no such distinction with Igor Pro, but a `function` can also serve as a subroutine as side effects in functions are not discouraged (as in most other languages) but used as a necessary tool for computation. To compute the normed vector, a Fortran-esque solution is to define the array outside of a defined function and pass the reference so that its values can be overwritten:
+```
+function normalizewave(inpwave,outwave)
+    wave inpwave
+    wave outwave
+    outwave = inpwave[p]/twonormdist(inpwave)
+end
 
-    function bar2()
-    	newdatafolder/s local
-    		make localwave = {1}
-    		make/n=(numpnts(localwave)) root:mynamespace:mywave
-    		wave transformed = root:mynamespace:mywave
-    		transformed = fn(localwave[p])
-    		... and so on ...
-    	killdatafolder : // this will kill any waves still residing in 'local'
-    end
+•make/o/n=(numpnts(vector)) newvector = NaN
+•print newvector
+  newvector[0]= {NaN,NaN,NaN}
+•normalizewave(vector,newvector)
+•print newvector
+  newvector_[0]= {0.816497,0.408248,0.408248}
+```
 
-    function bar3(wavefullname) // defined closer to a fortran subroutine but not really
-    	string wavefullname
-    	newdatafolder/s local
-    		make localwave = {1}
-    		make/n=(numpnts(localwave)) $wavefullname
-    		wave transformed = $wavefullname
-    		transformed = fn(localwave[p])
-    		... and so on ...
-    	killdatafolder : // this will kill any waves still residing in 'local'
-    end
+The following solution also works and is more appropriate when the length of output wave is unknown (in this case, it is obvious), though this style adds an element of unpredictability. (Sizes of waves can be changed any time using `redimension`, but this operation should also be used with much caution).
 
-    function twonorm(wavereference) // defined more like a fortran subroutine
-    	wave wavereference
-    	newdatafolder/s local
-    		make/n=(numpnts(wavereference)) wavesq = wavereference[p]^2
-    		wavereference = wavereference[p]/sqrt(sum(wavesq))
-    	killdatafolder :
-    end
+```
+function normalizewave_(inpwave,outwave)
+    wave inpwave
+    string outwave // name of new wave as a string variable
+    make/n=(numpnts(inpwave)) $outwave
+    wave outwaveref = $outwave
+    outwaveref = inpwave[p]/twonormdist(inpwave)
+end
+
+•normalizewave_(vector,"newvector_")
+•print newvector_
+  newvector_[0]= {0.816497,0.408248,0.408248}
+```
 
 Require HDF5 module (comment out ExportHDF5 if not desired). From the IGOR Manual (pp. II-47 to II-48 in Version 6.2):
 
-[T]he HDF5 file loader package consists of an extension named HDF5.xop, a help file named "HDF5 Help.ihf" and a procedure file named "HDF5 Browser.ipf". Here is how you would activate these files:
+[T]he HDF5 file loader package consists of an extension named "HDF5.xop", a help file named "HDF5 Help.ihf" and a procedure file named "HDF5 Browser.ipf". Here is how you would activate these files:
 
 1. Press the shift key and choose Help→Show Igor Pro Folder and User
    Files. This displays the Igor Pro Folder and the Igor Pro User
@@ -99,4 +96,4 @@ file were loaded by choosing Data→Load Waves→New HDF5 Browser. You can
 verify that the HDF5 Help file was opened by choosing Windows→Help
 Windows→HDF5 Help.ihf.
 
-This is automated in setup.sh for Mac/Linux (though paths may need to be changed).
+This is automated in `setup.sh` for Mac/Linux (though paths may need to be changed).
