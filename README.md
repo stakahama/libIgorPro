@@ -1,4 +1,4 @@
-Igor Pro (Wavemetrics, Inc.) is a software used by many members of the atmospheric aerosol community (among others). The included programming language grew out of a set of macro routines, so shows its operational heritage.
+Igor Pro (Wavemetrics, Inc.) is a software used by many members of the atmospheric aerosol community (among others). The included programming language grew out of a set of macro routines and displays its operational heritage.
 
 Challenges:
 - "Waves are global objects" (Igor manual Version 6.1, p. IV-48).
