@@ -30,7 +30,7 @@ end
 •print twonormdist(vector)
   1.22474
 ```
-`newdatafolder/s local` creates a new data folder and immediately sets this context as the new working scope. `killdatafolder :` kills all waves created in `local` data folder. Without using such a data folder, any waves created within the function can conflict with an existing wave (in the global scope), and temporary waves will have to be killed explicitly with `killwaves/z waveseq,...` and so on. I cannot speak to the efficiency of this approach of creating temporary data folders within each function, but computationally expensive operations will hopefully be handled by an XOP (external operating procedure, e.g., a C program) in any case.
+`newdatafolder/s local` creates a new data folder (can be any name as long as it does not already exist in the current scope/data folder) and immediately sets this context as the new working scope. `killdatafolder :` kills all waves created in `local` data folder. Without using such a data folder, any waves created within the function can conflict with an existing wave (in the global scope), and temporary waves will have to be killed explicitly with `killwaves/z waveseq,...` and so on. I cannot speak to the efficiency of this approach of creating temporary data folders within each function, but computationally expensive operations will hopefully be handled by an XOP (external operating procedure, e.g., a C program) in any case.
 
 *Computing on waves with functions.* An Igor Pro function serves as both function and subroutine (in Fortran parlance); side effects in functions are not discouraged as in most other languages but used as a necessary tool for computation. To compute the normed vector, a Fortran-esque solution is to define the array outside of the function definition and to pass the reference so that its values are overwritten:
 ```
@@ -64,6 +64,64 @@ end
   newvector_[0]= {0.816497,0.408248,0.408248}
 ```
 It is possible to create waves in the global or any other namespace at any time from within functions; this flexibility is dangerous as it results in "spaghetti code" or something possibly worse.
+
+Also, many operations create unwanted symbols in the global or local scope (data folder). For instance, 
+```
+•wavestats vector
+  V_npnts= 3; V_numNaNs= 0; V_numINFs= 0; V_avg= 0.666667; 
+  V_Sum= 2; V_sdev= 0.288675; V_sem= 0.166667; V_rms= 0.707107; 
+  V_adev= 0.222222; V_skew= 0.3849; V_kurt= -2.33333; V_minloc= 1; 
+  V_maxloc= 0; V_min= 0.5; V_max= 1; V_minRowLoc= 1; 
+  V_maxRowLoc= 0; V_startRow= 0; V_endRow= 2; 
+```
+All of the symbols preceded by `V_` are variables; if created within a function they persist only within the local scope of the function (variables and strings can have a local function scope, in contrast to waves). The following example shows a case where successive calls to a specific operation (`wavestats`) may be made within one function, leading to destructive updating (of `V_*` variables). Note that newer versions of Igor Pro have the functions `WaveMin` and `WaveMax`.
+```
+function largerdiff(waveref1,waveref2)
+    wave waveref1, waveref2
+    wavestats/q waveref1
+    variable range1 = V_max-V_min
+    wavestats/q waveref2 // overwrites previous assignments of V_max, etc.
+    variable range2 = V_max-V_min
+    variable which = 0
+    if( range1 > range2 )
+        which = 1
+    else
+        which = 2
+    endif
+    return which
+end
+```
+Example application to randomly-generated values:
+```
+•make wave1 = {0.653,0.728,0.266,0.598,0.7}
+•make wave2 = {0.693,0.766,0.793,0.271,0.493}
+print largerdiff(wave1,wave2)
+```
+In a more general case, we would like to encapsulate their behavior within functions (especially where waves can be created, and we would use `newdatafolder/s local` + `killdatafolder :` combination). No data folders are created or destroyed in the example above as only variables are created by `wavestats`, but we can still encapsulate the behavior of `wavestats` within functions that perform specific tasks:
+```
+function getdiff(waveref)
+    wave waveref
+    wavestats/q waveref
+    variable range = V_max-V_min
+    return range
+end
+
+function largerdiff_(waveref1,waveref2)
+    wave waveref1, waveref2
+    variable which = 0
+    if(getdiff(waveref1) > getdiff(waveref2))
+        which = 1
+    else
+        which = 2
+    endif
+    return which
+end
+```
+Which leads to the same result from cleaner code:
+```
+•print largerdiff_(wave1,wave2)
+  2
+```
 
 
 Require HDF5 module (comment out ExportHDF5 if not desired). From the IGOR Manual (pp. II-47 to II-48 in Version 6.2):
