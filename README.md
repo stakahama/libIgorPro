@@ -74,7 +74,7 @@ Also, many operations create unwanted symbols in the global or local scope (data
   V_maxloc= 0; V_min= 0.5; V_max= 1; V_minRowLoc= 1; 
   V_maxRowLoc= 0; V_startRow= 0; V_endRow= 2; 
 ```
-All of the symbols preceded by `V_` are variables; if created within a function they persist only within the local scope of the function (variables and strings can have a local function scope, in contrast to waves). The following example shows a case where successive calls to a specific operation (`wavestats`) may be made within one function, leading to destructive updating (of `V_*` variables). Note that newer versions of Igor Pro have the functions `WaveMin` and `WaveMax`.
+All of the symbols preceded by `V_` are variables; if created within a function they persist only within the local scope of the function (variables and strings can have a local function scope, in contrast to waves). The following example shows a case where successive calls to a specific operation (`wavestats`) may be made within one function, leading to destructive updating (of `V_*` variables). Note that newer versions of Igor Pro have the functions `WaveMin` and `WaveMax` so this illustration is mostly for pedagogical purposes.
 ```
 function largerdiff(waveref1,waveref2)
     wave waveref1, waveref2
@@ -95,7 +95,8 @@ Example application to randomly-generated values:
 ```
 •make wave1 = {0.653,0.728,0.266,0.598,0.7}
 •make wave2 = {0.693,0.766,0.793,0.271,0.493}
-print largerdiff(wave1,wave2)
+•print largerdiff(wave1,wave2)
+  2
 ```
 In a more general case, we would like to encapsulate their behavior within functions (especially where waves can be created, and we would use `newdatafolder/s local` + `killdatafolder :` combination). No data folders are created or destroyed in the example above as only variables are created by `wavestats`, but we can still encapsulate the behavior of `wavestats` within functions that perform specific tasks:
 ```
