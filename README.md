@@ -1,4 +1,4 @@
-Igor Pro (Wavemetrics, Inc.) is a software used by many members of the atmospheric aerosol community (among others). The included programming language grew out of a set of macro routines and displays its operational heritage.
+Igor Pro (Wavemetrics, Inc.) is a software used by many members of the atmospheric aerosol community (among others). The included programming language grew out of a set of macro routines, and displays its operational heritage.
 
 Challenges:
 - "Waves are global objects" (Igor manual Version 6.1, p. IV-48).
@@ -12,7 +12,7 @@ Remedies:
 
 The ipf file(s) in this project can be included in 
 `~/Documents/WaveMetrics/Igor Pro 6 User Files/` (Mac), or `C:/Documents and Settings/username/My Documents/WaveMetrics/Igor Pro 6 User Files/` (Windows) to have these functions available for every Igor program.
-On a Mac, can set `ln -s stlib.ipf "~/Documents/WaveMetrics/Igor Pro 6 User Files/"`; on Windows this can also be handled through a shortcut. In a procedure window, use `#include "stlib"` statement to use functions from the library.
+On a Mac, can set `ln -s stlib.ipf "~/Documents/WaveMetrics/Igor Pro 6 User Files/"` (included in `setup.sh` which also handles linking of HDF5 libraries); on Windows this can also be handled through a shortcut. In a procedure window, use `#include "stlib"` statement to use functions from the library.
 
 *Local environments.* Local function environments can be implemented using data folders as shown in the following example; we define a function to calculate the two-norm distance of a vector.
 ```
@@ -45,7 +45,7 @@ end
   newvector[0]= {NaN,NaN,NaN}
 •normalizewave(vector,newvector)
 •print newvector
-  newvector_[0]= {0.816497,0.408248,0.408248}
+  newvector[0]= {0.816497,0.408248,0.408248}
 ```
 
 The following solution also works and is more appropriate when the length of output wave is unknown (in this case, it is obvious), though this style adds an element of unpredictability. (Sizes of waves can be changed any time using `redimension`, but this operation should also be used with much caution).
