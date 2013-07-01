@@ -316,7 +316,7 @@ end
 function killwindows(typestr)
 	string typestr
 	newdatafolder/s local0987asdfzcxv
-		make/o mapping = {1,2,4}
+		make/o/n=4 mapping=p+1
 		setdimlabel 0, 0, Graph, mapping
 		setdimlabel 0, 1, Table, mapping
 		setdimlabel 0, 3, Layout, mapping
@@ -333,6 +333,36 @@ function killwindows(typestr)
 		i += 1
 		while(1 )
 	killdatafolder :
+end
+
+function replace(xwave,list,value)
+	//replaces "xwave" with "value" for elements marked by indices given in "list"
+	//need to check if xwave/value is double
+	wave xwave      // this wave will be overwritten
+	wave list          // wave of indices
+	variable value // scale value
+	variable i = 0
+	for(i=0;i<numpnts(list);i=i+1)
+		xwave[list[i]] = value
+	endfor
+end
+
+function getidx(start1,end1,start2,end2)
+// start1, end1 is for low time resolution data
+// start2, end2 is high time resolution value data
+// creates a wave called "idx" which is the same length of start2, end2
+// and contains indices of start1, end1
+// use "extract" to subset and average based on these indices
+	wave start1, end1,start2,end2
+	make/n=(numpnts(start2)) idx = NaN
+	variable i=0, j=0
+	for(i=0;i<numpnts(start1);i=i+1)
+		Extract/INDX start2, destwave, start2 >= start1[i] & end2 <= end1[i]
+		if(numpnts(destwave) > 0)
+			replace(idx,destwave,i)
+		endif
+	endfor
+	//return idx
 end
 
 function killgraphs()
