@@ -1,5 +1,6 @@
 #pragma rtGlobals=1		// Use modern global access method.
 
+///_* === data folders ===
 function makedf( foldernamestr, [set])
 	// makes data folder if it does not exists
 	// sets current data folder to foldernamestr if set==1
@@ -24,29 +25,7 @@ function makedf( foldernamestr, [set])
 	return 0
 end
 
-function readlines( filenamestr,wavestr )
-	//save contents of values in filenamestr to wavestr
-	string filenamestr, wavestr
-	//
-	// make data folder for wave
-	makedf( fileparts(wavestr, part="dirname") )
-	// read and store
-	LoadWave/J/O/K=2/A=tmpwave/Q filenamestr
-	variable ix=0
-	do
-		string tmpwavestr = stringfromlist(ix,S_waveNames)
-		if( strlen(tmpwavestr)==0 )
-			break
-		endif
-		if( ix==0 )		
-			 duplicate/o $tmpwavestr, $wavestr	
-		endif
-		killwaves/z $tmpwavestr
-		ix += 1
-	while(1)
-end
-
-// === shell utilities ===
+///_* === shell utilities ===
 
 function/s filenameasdirectory(filename)
 	// return file name as directory (appends ":" if needed)
@@ -105,7 +84,7 @@ function/s fromroot(path)
 	return path	
 end
 
-// === getter/setter functions ===
+///_* === getter/setter functions ===
 
 // implement namespaces as
 // assignvar(fullfile(namespace,variablename),value)
@@ -162,7 +141,7 @@ function getvar( varnamestr, [df] )
 	return value
 end
 
-// === tests ===
+///_* === tests ===
 
 function fileexistsp(filename)
 	string filename
@@ -175,6 +154,36 @@ function fileexistsp(filename)
 	endif
 end
 
+function fileerrorp(filenamestr)
+	string filenamestr
+	variable refnum=-999
+	open/z=1/r refnum as filenamestr
+	if( refnum==-999 )
+		return 0
+	else
+		close refnum
+		return 1
+	endif
+end
+
+function existsp(name,[df])
+	//returns 1 or 0
+	string name
+	string df
+	if( paramisdefault(df) )
+		df = getdatafolder(1) //current data folder is defautl
+	endif
+	svar/z str = $(df + name)
+	nvar/z var = $(df + name)
+	wave wav = $(df + name)
+	variable value = 0
+	if(svar_exists(str) || nvar_exists(var) || waveexists(wav))
+		value = 1
+	endif
+	return value
+end
+
+//{{{
 // Function fileopenerror(pathName, fileName)
 // 	// checks if fileName in pathName exists on disk
 // 	// must have copied this from igor manual -- search for "error in demoopen"
@@ -201,6 +210,7 @@ end
 // 	print fullName + " exists"
 // 	return 0
 // End
+//}}}
 
 function isstringinwavep(strval,txtwave)
 	// tests if strval is in list
@@ -232,7 +242,7 @@ function iswaveinrangep(waveref,minval,maxval)
 	return truefalse
 end
 
-// === wave to liststr
+///_* === wave to liststr
 
 function/s wave2liststr(txtwave)
 	// takes a text wave and concatenates elements into a list string
@@ -280,27 +290,24 @@ Function/s datafolderwavesasliststr(datafoldername)
 	return liststr
 End
 
-function fileerrorp(filenamestr)
-	string filenamestr
-	variable refnum=-999
-	open/z=1/r refnum as filenamestr
-	if( refnum==-999 )
-		return 0
-	else
-		close refnum
-		return 1
-	endif
-end
-
 function asdatetime(wv)
 	wave wv
 	setscale d 0, 0, "dat", wv
 end
 
-function killloadedwaves(s_wavenames)
+function killloadedwaves([s_wavenames])
 	string s_wavenames
 	string elem
-	variable ix=0
+	if( paramisdefault(s_wavenames) ) 
+		svar/z loadedwaves =  $(GetDataFolder(1) + "S_waveNames")
+		if( svar_exists(loadedwaves) )
+			s_wavenames = loadedwaves
+		else
+			print "S_waveNames does not exit; no waves killed"
+			return 1
+		endif
+	endif
+	variable ix=0	
 	do
 		elem = stringfromlist(ix,s_wavenames)
 		if( strlen(elem)==0 )
@@ -309,6 +316,9 @@ function killloadedwaves(s_wavenames)
 		print "killing "+ elem
 		wave waveref = $elem
 		killwaves/z waveref
+		if(waveexists(waveref))
+			print "...failed"
+		endif
 		ix += 1
 	while(1)
 end
@@ -347,14 +357,19 @@ function replace(xwave,list,value)
 	endfor
 end
 
-function getidx(start1,end1,start2,end2)
+function getidx(start1,end1,start2,end2,idx)
 // start1, end1 is for low time resolution data
 // start2, end2 is high time resolution value data
-// creates a wave called "idx" which is the same length of start2, end2
+// idx is a wave of indices that will be redimensioned to be the same length as start2, end2
 // and contains indices of start1, end1
 // use "extract" to subset and average based on these indices
 	wave start1, end1,start2,end2
-	make/n=(numpnts(start2)) idx = NaN
+	wave idx
+	// initialize
+	redimension/n=(numpnts(start2)) idx
+	idx = NaN
+	// operation
+	newdatafolder/s local //so as not to clutter globalspace with destwave
 	variable i=0, j=0
 	for(i=0;i<numpnts(start1);i=i+1)
 		Extract/INDX start2, destwave, start2 >= start1[i] & end2 <= end1[i]
@@ -362,16 +377,18 @@ function getidx(start1,end1,start2,end2)
 			replace(idx,destwave,i)
 		endif
 	endfor
-	//return idx
+	killdatafolder :
 end
 
 function killgraphs()
 	killwindows("Graph")
 end
 
-// === hdf5 ===
+///_* === I/O ===
+///_ . HDF5
 
 Function ExportHDF5(pathStr, fileName, listOfWaves)
+// taken from the Igor manual
 // usage example:
 // exporthdf5("turtle:Users:stakahama:tmp","testOut.h5","scatnumbylogdparr;scatmassbylogdparr;specsizequad;nspecdatetimearray")
 
@@ -420,3 +437,27 @@ Function ExportHDF5(pathStr, fileName, listOfWaves)
         
         return result
 End
+
+///_ . ASCII
+function readlines( filenamestr,wavestr )
+	//save contents of values in filenamestr to wavestr
+	string filenamestr, wavestr
+	//
+	// make data folder for wave
+	makedf( fileparts(wavestr, part="dirname") )
+	// read and store
+	LoadWave/J/O/K=2/A=tmpwave/Q filenamestr
+	variable ix=0
+	do
+		string tmpwavestr = stringfromlist(ix,S_waveNames)
+		if( strlen(tmpwavestr)==0 )
+			break
+		endif
+		if( ix==0 )		
+			 duplicate/o $tmpwavestr, $wavestr	
+		endif
+		killwaves/z $tmpwavestr
+		ix += 1
+	while(1)
+end
+
